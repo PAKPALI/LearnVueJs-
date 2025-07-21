@@ -3,9 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return view('welcome'); // c’est ici que Vue est injecté
-});
+// Route::get('/', function () {
+//     return view('welcome'); // c’est ici que Vue est injecté
+// });
+
+Route::get('/{any}', function () {
+    return view('welcome');
+})->where('any', '.*');
+
 // Route::get('/', function () {
 //     return Inertia::render('Welcome');
 // })->name('home');
