@@ -35,9 +35,9 @@
             </div>
           </form>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer bg-light">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-          <button type="button" class="btn btn-primary" @click="validerProduit">Valider</button>
+          <button type="button" class="btn btn-primary" @click="validerProduit">Ajouter</button>
         </div>
       </div>
     </div>
@@ -86,7 +86,7 @@
   const quantite = ref(0)
   const limite = ref(0)
 
-  const nameLog = ref('')
+  const nameLog = ref('Aucun nom pour le moment')
   const labelNameLog = ref('text-danger')
   let nameLenght = 0
 
@@ -110,7 +110,7 @@
   
   function validateNom(event) {
     nameLenght = event.target.value.length
-    nameLog.value = nameLenght< 3 ? 'Le nom doit contenir au moins 3 caractères' : 'Nombre de caractère valide'
+    nameLog.value = nameLenght< 3 ? 'Le nom doit contenir au moins 3 caractères' : 'Nombre de caractère valide ('+event.target.value+')'
     labelNameLog.value = nameLenght < 3 ? 'text-danger' : 'text-success'
   }
 
