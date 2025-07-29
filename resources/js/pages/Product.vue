@@ -12,12 +12,12 @@
           <form>
             <div class="mb-3">
               <label for="nomProduit" class="form-label">Nom du produit</label>
-              <input type="text" class="form-control" id="nomProduit" v-model="nom" @keyup="validateNom">
+              <input type="text" class="form-control" id="nomProduit" v-model="name" @keyup="validateName">
               <label :class="labelNameLog">{{ nameLog }}</label>
             </div>
             <div class="mb-3">
               <label for="quantite" class="form-label">Quantité</label>
-              <input type="number" class="form-control" id="quantite" v-model="quantite" @keyup="validateQte">
+              <input type="number" class="form-control" id="quantite" v-model="quantity" @keyup="validateQte">
               <label :class="labelQteLog">{{ qteLog }}</label>
             </div>
             <div class="mb-3">
@@ -37,7 +37,7 @@
         </div>
         <div class="modal-footer bg-light">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-          <button type="button" class="btn btn-primary" @click="validerProduit">Ajouter</button>
+          <button type="button" class="btn btn-primary" @click="saveProduct">Ajouter</button>
         </div>
       </div>
     </div>
@@ -50,6 +50,7 @@
           <option value="2">Nuit</option>
       </select>
     </div>
+    <!-- add product -->
     <div class="row">
       <div class="col-8 border-end">
         <h2>Page Produits</h2>
@@ -58,18 +59,54 @@
         <button class="btn btn-primary mt-3 me-2" @click="addProduct">+ Ajouter un produit</button>
       </div>
     </div>
+    <!--tableau des produits -->
     <div class="row mt-3 border-top pt-3">
-      <p>Liste des produits...</p>
+      <table class="table table-bordered table-hover">
+        <thead class="table-primary">
+          <tr>
+            <th>#</th>
+            <th>Nom</th>
+            <th>Quantité</th>
+            <th>Limite</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(product, index) in products" :key="product.id">
+            <td>{{ index + 1 }}</td>
+            <td>{{ product.name }}</td>
+            <td>{{ product.qty }}</td>
+            <td>{{ product.limit }}</td>
+            <td>
+              <span class="badge bg-success" v-if="product.status == 1">Disponible</span>
+              <span class="badge bg-danger" v-else>Indisponible</span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-warning me-1" @click="modifierProduit(product)">
+                <i class="bi bi-pencil-square"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" @click="supprimerProduit(product.id)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+
+          <tr v-if="products.length === 0">
+            <td colspan="6" class="text-center text-danger">Aucun produit trouvé</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
 
 <script setup>
-
+// Importation des dépendances
   import { Modal } from 'bootstrap'
+  import axios from 'axios'
+  import { ref, defineProps, onMounted } from 'vue'
 
-
-  import { ref, defineProps } from 'vue'
   // Props
   const props = defineProps({
     mode: String,
@@ -77,13 +114,13 @@
     bgColorChange: Function
   })
 
-   function onChange(event) {
+  function onChange(event) {
     // Appel de la fonction du parent pour changer le mode
     props.setMode(event.target.value)
   }
 
-  const nom = ref('')
-  const quantite = ref(0)
+  const name = ref('')
+  const quantity = ref(0)
   const limite = ref(0)
 
   const nameLog = ref('Aucun nom pour le moment')
@@ -108,7 +145,7 @@
     modal.show()
   }
   
-  function validateNom(event) {
+  function validateName(event) {
     nameLenght = event.target.value.length
     nameLog.value = nameLenght< 3 ? 'Le nom doit contenir au moins 3 caractères' : 'Nombre de caractère valide ('+event.target.value+')'
     labelNameLog.value = nameLenght < 3 ? 'text-danger' : 'text-success'
@@ -137,6 +174,61 @@
     }else {
       statusLog.value = 'Le status est indisponible'
       labelStatusLog.value = 'text-danger'
+    }
+  }
+
+  const products = ref([])
+  // Fonction pour recuperer les produits
+  async function getProducts() {
+  try {
+    const response = await axios.get('/api/products', {
+      headers: {
+        Accept: 'application/json'
+      }
+    });
+
+    products.value = response.data;
+    console.log('Produits récupérés:', products.value);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des produits:', error);
+  }
+}
+
+
+  onMounted(() => {
+    getProducts()
+  })
+
+  function hideModal(id) {
+    const modal = Modal.getInstance(document.getElementById(id))
+    modal.hide()
+  }
+
+  function resetForm() {
+    name.value = ''
+    quantity.value = 0
+    limite.value = 0
+    status.value = ''
+  }
+
+  async function saveProduct() {
+    try {
+      const data = {
+        name: name.value,
+        quantity: quantity.value,
+        limit: limite.value,
+        status: status.value
+      }
+      await axios.post('/api/products', data)
+      console.log("Produit ajouté avec succès:", data)
+      // Vider les champs
+      resetForm()
+      // Recharger les produits
+      getProducts()
+      // Fermer le modal
+      hideModal('addProductModal')
+    } catch (error) {
+      console.error("Erreur lors de l'ajout :", error)
     }
   }
 </script>
