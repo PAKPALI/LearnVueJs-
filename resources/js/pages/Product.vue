@@ -1,5 +1,5 @@
 <template>
-  <!-- Modal -->
+  <!-- addModal -->
   <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -38,6 +38,50 @@
         <div class="modal-footer bg-light">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
           <button type="button" class="btn btn-primary" @click="saveProduct">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- addModal -->
+  <div class="modal fade" id="updatedProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-white">
+          <h5 class="modal-title" id="addProductModalLabel">Modifier un produit</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Formulaire ici -->
+          <form>
+            <div class="mb-3">
+              <label for="nomProduit" class="form-label">Nom du produit</label>
+              <input type="text" class="form-control" id="nomProduit" v-model="name" @keyup="validateName">
+              <label :class="labelNameLog">{{ visible ? nameLog : '' }}</label>
+            </div>
+            <div class="mb-3">
+              <label for="quantite" class="form-label">Quantité</label>
+              <input type="number" class="form-control" id="quantite" v-model="quantity" @keyup="validateQte">
+              <label :class="labelQteLog">{{ visible ? qteLog: '' }}</label>
+            </div>
+            <div class="mb-3">
+              <label for="limite" class="form-label">Limite</label>
+              <input type="number" class="form-control" id="limite" v-model="limite" @keyup="validateLimit">
+              <label :class="labelLimitLog">{{ visible ? limitLog : '' }}</label>
+            </div>
+            <div class="mb-3">
+              <label for="statut" class="form-label">Statut (<label :class="labelStatusLog">{{visible ? statusLog : '' }}</label></label>)
+              <select class="form-select" id="statut" v-model="status" @change="changeStatus">
+                <option value="">-- Choisir un statut --</option>
+                <option value="1">Disponible</option>
+                <option value="2">Indisponible</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+          <button type="button" class="btn btn-warning" @click="updateProduct">Modifier</button>
         </div>
       </div>
     </div>
@@ -83,7 +127,7 @@
               <span class="badge bg-danger" v-else>Indisponible</span>
             </td>
             <td>
-              <button class="btn btn-sm btn-warning me-1" @click="modifierProduit(product)">
+              <button class="btn btn-sm btn-warning me-1" @click="productUpdated(product)">
                 <i class="bi bi-pencil-square"></i>
               </button>
               <button class="btn btn-sm btn-danger" @click="supprimerProduit(product.id)">
@@ -139,31 +183,49 @@
   const labelStatusLog = ref('text-danger')
   const status = ref('')
   
+  // call modal add
   function addProduct() {
+    resetForm()
     // Ouvre le modal pour ajouter un produit
     const modal = new Modal(document.getElementById('addProductModal'))
     modal.show()
   }
+  // call modal update
+  const visible = ref(true)
+  function productUpdated(product) {
+    visible.value = false
+    // Ouvre le modal pour modifier un produit
+    name.value = product.name
+    quantity.value = product.qty
+    limite.value = product.limit
+    status.value = product.status
+    const modal = new Modal(document.getElementById('updatedProductModal'))
+    modal.show()
+  }
   
   function validateName(event) {
+    visible.value = true
     nameLenght = event.target.value.length
     nameLog.value = nameLenght< 3 ? 'Le nom doit contenir au moins 3 caractères' : 'Nombre de caractère valide ('+event.target.value+')'
     labelNameLog.value = nameLenght < 3 ? 'text-danger' : 'text-success'
   }
 
   function validateQte(event) {
+    visible.value = true
     qte = event.target.value
     qteLog.value = qte <= 0 ? 'La quantité est égale à 0' : 'La quantité est égale à ' + qte
     labelQteLog.value = qte <= 0 ? 'text-danger' : 'text-success'
   }
 
   function validateLimit(event) {
+    visible.value = true
     limit = event.target.value
     limitLog.value = limit <= 0 ? 'La limite est égale à 0' : 'La limite est égale à ' + limit
     labelLimitLog.value = limit <= 0 ? 'text-danger' : 'text-success'
   }
 
   function changeStatus(event) {
+    visible.value = true
     status.value = event.target.value
     if(status.value == 0 ) {
       statusLog.value = 'Choisir un statut'
@@ -180,20 +242,17 @@
   const products = ref([])
   // Fonction pour recuperer les produits
   async function getProducts() {
-  try {
-    const response = await axios.get('/api/products', {
-      headers: {
-        Accept: 'application/json'
-      }
-    });
+    try {
+      const response = await axios.get('/api/products', {
+        headers: {Accept: 'application/json'}
+      });
 
-    products.value = response.data;
-    console.log('Produits récupérés:', products.value);
-  } catch (error) {
-    console.error('Erreur lors de la récupération des produits:', error);
+      products.value = response.data;
+      console.log('Produits récupérés:', products.value);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des produits:', error);
+    }
   }
-}
-
 
   onMounted(() => {
     getProducts()
@@ -206,11 +265,24 @@
 
   function resetForm() {
     name.value = ''
+    nameLog.value = 'Aucun nom pour le moment'
+    labelNameLog.value = 'text-danger'
+
     quantity.value = 0
+    qteLog.value = 'La quantité est égale à 0'
+    labelQteLog.value = 'text-danger'
+
     limite.value = 0
+    limitLog.value = 'La limite est égale à 0'
+    labelLimitLog.value = 'text-danger'
+
     status.value = ''
+    statusLog.value = 'Le status est sur indisponible'
+    labelStatusLog.value = 'text-danger'
   }
 
+  // npm install sweetalert2
+  import Swal from 'sweetalert2'
   async function saveProduct() {
     try {
       const data = {
@@ -219,16 +291,48 @@
         limit: limite.value,
         status: status.value
       }
-      await axios.post('/api/products', data)
+      const response = await axios.post('/api/products', data, {
+        headers: { Accept: 'application/json'}
+      })
       console.log("Produit ajouté avec succès:", data)
-      // Vider les champs
-      resetForm()
-      // Recharger les produits
-      getProducts()
-      // Fermer le modal
-      hideModal('addProductModal')
+
+      if (response.data.status) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          // title: 'Produit ajouté avec succès ✅',
+          title: response.data.message,
+          animation: true,
+          showConfirmButton: false,
+          timer: 5000,
+          timerProgressBar: true
+        })
+        // Vider les champs
+        resetForm()
+        // Recharger les produits
+        getProducts()
+        // Fermer le modal
+        hideModal('addProductModal')
+      } else {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          // title: 'Une erreur est survenue lors de l\'ajout du produit.❌',
+          title: response.data.message,
+          showConfirmButton: false,
+          timer: 5000,
+          timerProgressBar: true
+        })
+      }
     } catch (error) {
       console.error("Erreur lors de l'ajout :", error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur serveur',
+        text: 'Une erreur est survenue lors de l\'ajout du produit.❌'
+      })
     }
   }
 </script>
