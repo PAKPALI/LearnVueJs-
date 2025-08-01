@@ -43,7 +43,7 @@
     </div>
   </div>
 
-  <!-- addModal -->
+  <!-- updateModal -->
   <div class="modal fade" id="updatedProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -57,20 +57,20 @@
             <div class="mb-3">
               <label for="nomProduit" class="form-label">Nom du produit</label>
               <input type="text" class="form-control" id="nomProduit" v-model="name" @keyup="validateName">
-              <label :class="labelNameLog">{{ visible ? nameLog : '' }}</label>
+              <label :class="labelNameLog">{{ visibleName ? nameLog : '' }}</label>
             </div>
             <div class="mb-3">
               <label for="quantite" class="form-label">Quantité</label>
               <input type="number" class="form-control" id="quantite" v-model="quantity" @keyup="validateQte">
-              <label :class="labelQteLog">{{ visible ? qteLog: '' }}</label>
+              <label :class="labelQteLog">{{ visibleQte ? qteLog: '' }}</label>
             </div>
             <div class="mb-3">
               <label for="limite" class="form-label">Limite</label>
               <input type="number" class="form-control" id="limite" v-model="limite" @keyup="validateLimit">
-              <label :class="labelLimitLog">{{ visible ? limitLog : '' }}</label>
+              <label :class="labelLimitLog">{{ visibleLimit ? limitLog : '' }}</label>
             </div>
             <div class="mb-3">
-              <label for="statut" class="form-label">Statut (<label :class="labelStatusLog">{{visible ? statusLog : '' }}</label></label>)
+              <label for="statut" class="form-label">Statut (<label :class="labelStatusLog">{{visibleStatus ? statusLog : '' }}</label></label>)
               <select class="form-select" id="statut" v-model="status" @change="changeStatus">
                 <option value="">-- Choisir un statut --</option>
                 <option value="1">Disponible</option>
@@ -191,9 +191,15 @@
     modal.show()
   }
   // call modal update
-  const visible = ref(true)
+  const visibleName = ref(true)
+  const visibleQte = ref(true)
+  const visibleLimit = ref(true)
+  const visibleStatus = ref(true)
   function productUpdated(product) {
-    visible.value = false
+    visibleName.value = true
+    visibleQte.value = true
+    visibleLimit.value = true
+    visibleStatus.value = true
     // Ouvre le modal pour modifier un produit
     name.value = product.name
     quantity.value = product.qty
