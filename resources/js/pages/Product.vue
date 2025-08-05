@@ -37,7 +37,7 @@
         </div>
         <div class="modal-footer bg-light">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-          <button type="button" class="btn btn-primary" @click="saveProduct">Ajouter</button>
+          <button type="button" class="btn btn-primary" @click="saveProduct" :disabled="false">Ajouter</button>
         </div>
       </div>
     </div>
@@ -47,7 +47,7 @@
   <div class="modal fade" id="updatedProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header bg-warning text-white">
+        <div class="modal-header bg-warning text-dark">
           <h5 class="modal-title" id="addProductModalLabel">Modifier un produit</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
         </div>
@@ -130,7 +130,7 @@
               <button class="btn btn-sm btn-warning me-1" @click="productUpdated(product)">
                 <i class="bi bi-pencil-square"></i>
               </button>
-              <button class="btn btn-sm btn-danger" @click="supprimerProduit(product.id)">
+              <button class="btn btn-sm btn-danger" @click="deletedProduct(product.id)">
                 <i class="bi bi-trash"></i>
               </button>
             </td>
@@ -190,17 +190,17 @@
     const modal = new Modal(document.getElementById('addProductModal'))
     modal.show()
   }
+  
+  const visibleName = ref(false)
+  const visibleQte = ref(false)
+  const visibleLimit = ref(false)
+  const visibleStatus = ref(false)
+  const disabled = ref(false)
+  
   // call modal update
-  const visibleName = ref(true)
-  const visibleQte = ref(true)
-  const visibleLimit = ref(true)
-  const visibleStatus = ref(true)
   function productUpdated(product) {
-    visibleName.value = true
-    visibleQte.value = true
-    visibleLimit.value = true
-    visibleStatus.value = true
     // Ouvre le modal pour modifier un produit
+    productId = product.id
     name.value = product.name
     quantity.value = product.qty
     limite.value = product.limit
@@ -210,28 +210,31 @@
   }
   
   function validateName(event) {
-    visible.value = true
+    visibleName.value = true
     nameLenght = event.target.value.length
     nameLog.value = nameLenght< 3 ? 'Le nom doit contenir au moins 3 caractères' : 'Nombre de caractère valide ('+event.target.value+')'
     labelNameLog.value = nameLenght < 3 ? 'text-danger' : 'text-success'
+    validateForm()
   }
 
   function validateQte(event) {
-    visible.value = true
+    visibleQte.value = true
     qte = event.target.value
     qteLog.value = qte <= 0 ? 'La quantité est égale à 0' : 'La quantité est égale à ' + qte
     labelQteLog.value = qte <= 0 ? 'text-danger' : 'text-success'
+    validateForm()
   }
 
   function validateLimit(event) {
-    visible.value = true
+    visibleLimit.value = true
     limit = event.target.value
     limitLog.value = limit <= 0 ? 'La limite est égale à 0' : 'La limite est égale à ' + limit
     labelLimitLog.value = limit <= 0 ? 'text-danger' : 'text-success'
+    validateForm()
   }
 
   function changeStatus(event) {
-    visible.value = true
+    visibleStatus.value = true
     status.value = event.target.value
     if(status.value == 0 ) {
       statusLog.value = 'Choisir un statut'
@@ -242,6 +245,15 @@
     }else {
       statusLog.value = 'Le status est indisponible'
       labelStatusLog.value = 'text-danger'
+    }
+    validateForm()
+  }
+
+  function validateForm() {
+    if(nameLenght >= 3 && qte > 0 && limit > 0 && status.value !== ''){
+      disabled.value = true
+    } else {
+      disabled.value = false
     }
   }
 
@@ -289,6 +301,7 @@
 
   // npm install sweetalert2
   import Swal from 'sweetalert2'
+  // save product in database
   async function saveProduct() {
     try {
       const data = {
@@ -339,6 +352,106 @@
         title: 'Erreur serveur',
         text: 'Une erreur est survenue lors de l\'ajout du produit.❌'
       })
+    }
+  }
+
+  // update product in database
+  async function updateProduct() {
+    try {
+      const data = {
+        id: productId,
+        name: name.value,
+        quantity: quantity.value,
+        limit: limite.value,
+        status: status.value
+      }
+      const response = await axios.put('/api/products/' + productId, data, {
+        headers: { Accept: 'application/json'}
+      })
+      console.log("Produit modifié avec succès:", data)
+
+      if (response.data.status) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          // title: 'Produit modifié avec succès ✅',
+          title: response.data.message,
+          animation: true,
+          showConfirmButton: false,
+          timer: 5000,
+          timerProgressBar: true
+        })
+        // Recharger les produits
+        getProducts()
+        // Fermer le modal
+        hideModal('updatedProductModal')
+      } else {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          // title: 'Une erreur est survenue lors de la modification du produit.❌',
+          title: response.data.message,
+          showConfirmButton: false,
+          timer: 5000,
+          timerProgressBar: true
+        })
+      }
+    } catch (error) {
+      console.error("Erreur lors de la modification :", error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur serveur',
+        text: 'Une erreur est survenue lors de la modification du produit.❌'
+      })
+    }
+  }
+
+  // call delete alert and delete product if confirmed
+  let productId = 0
+  async function deletedProduct(id) {
+    const result = await Swal.fire({
+      title: 'Es-tu sûr ?',
+      text: "Cette action est irréversible !",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler'
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await axios.delete('/api/products/' + id, {
+          headers: { Accept: 'application/json' }
+        })
+        
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Produit supprimé avec succès ✅',
+          showConfirmButton: false,
+          timer: 3000
+        })
+
+        // Recharge la liste des produits
+        getProducts()
+      } catch (error) {
+        console.error("Erreur lors de la suppression :", error)
+
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: 'Échec de la suppression ❌',
+          text: error?.response?.data?.message || "Erreur serveur",
+          showConfirmButton: false,
+          timer: 4000
+        })
+      }
     }
   }
 </script>
