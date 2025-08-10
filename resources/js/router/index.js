@@ -15,7 +15,6 @@ const router = createRouter({
 
 export default router
 
-
 // explication rapide :
 
 // import Home from '../pages/Home.vue'

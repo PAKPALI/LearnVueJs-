@@ -196,11 +196,8 @@ php artisan serve
 
 Quand tu ouvres cette URL, tu vois le composant Vue qui s'affiche.
 
-🧠 Tu veux aller plus loin ?
-Tu peux me dire :
-
-Si tu veux utiliser Vue pour tout le frontend (SPA) ou juste pour des composants sur certaines pages Laravel
-
-Si tu veux découvrir Vue Router, Pinia, ou des concepts comme les props, computed, etc.
-
-Souhaites-tu maintenant qu’on ajoute un formulaire dynamique, une liste avec boucle v-for, ou un événement avec @click ?
+Installation
+npm install vue@3 bootstrap
+npm install vite@latest
+npm install vue-router
+npm install sweetalert2@latest

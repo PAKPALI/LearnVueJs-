@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-
     <head>
         <meta charset="UTF-8">
         <title>Test VueJS avec Laravel</title>
@@ -15,5 +14,4 @@
     <body>
         <div id="app"></div>
     </body>
-
 </html>

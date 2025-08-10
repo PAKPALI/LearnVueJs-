@@ -2,11 +2,11 @@
 <template>
   <div class="d-flex">
     <!-- Sidebar à gauche -->
-    <Sidebar />
+    <SideBar />
 
     <!-- Contenu principal à droite -->
     <div class="flex-grow-1">
-      <Navbar />
+      <NavBar />
       <div class="container border p-3 mt-5" :class="bgColor">
         <router-view v-slot="{ Component }">
           <component :is="Component" :mode="mode" :setMode="setMode" :bgColorChange="bgColorChange" />
@@ -17,8 +17,8 @@
 </template>
 
 <script setup>
-  import Sidebar from './Sidebar.vue'
-  import Navbar from './Navbar.vue'
+  import SideBar from './SideBar.vue'
+  import NavBar from './NavBar.vue'
   import { ref } from 'vue'
 
   const mode = ref('1')
